@@ -1,0 +1,97 @@
+extends layout
+
+block content
+
+    h1= title
+    p Downloading: #{title}
+    a(id="arrayData" style={display: "none"}) #{JSON.stringify(array)}
+
+
+    form(id="form", action="/downloadAdvanced", method="post", enctype="application/x-www-form-urlencoded")
+        p Single Download
+        label(for="itag") itag value of format to download &nbsp;
+        input(name="url", value="#{url}", hidden)
+        input(name="itag", placeholder="itag value of format", id="itag")
+        button(type="submit") Download
+        br
+        small Please see the table below for supported formats of this video
+
+    hr
+
+    form(action="multiDL" method="post" enctype="application/x-www-form-urlencoded")
+        p MultiDownload? (Connect audio and Videl Stream?)
+        input(name="url", value="#{url}", hidden)
+        input(name="title", value="#{title}", hidden)
+        label(for="videoItag") Video itag value of format to download &nbsp;
+        input(name="videoItag", placeholder="video itag value of format", id="videoItag" required)
+        br
+        label(for="audioItag") Audio itag value of format to download &nbsp;
+        input(name="audioItag", placeholder="audio itag value of format", id="audioItag" required)
+        br
+        button(type="submit") Download & Convert
+
+
+    hr
+    p Avaliable Formats for this Video:
+    table(id="formats", border="1")
+        tr
+            th Video Format
+            th Audio Codec
+            th Audio Quality
+            th A(udio)?/V(ideo)?
+            th File container
+            th iTag Value
+
+
+    hr
+    p © 2022 BJM SoftwareWorks - b.jm021
+
+
+
+
+    script.
+        let array = JSON.parse(document.getElementById("arrayData").innerHTML);
+        console.log(array);
+        let table= document.getElementById("formats");
+
+        for (let format in array['formats']) {
+            let tr = document.createElement("tr");
+            let td = document.createElement("td");
+            td.innerText = array['formats'][format]['qualityLabel'];
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.innerText = array['formats'][format]['audioCodec'];
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+            td = document.createElement("td");
+            td.innerText = array['formats'][format]['audioQuality'];
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+            td = document.createElement("td");
+            if (array['formats'][format]['hasAudio']) {
+                td.innerText += "A "
+            }
+            if (array['formats'][format]['hasVideo']) {
+                td.innerText += " V"
+            }
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+            td = document.createElement("td");
+            td.innerText = array['formats'][format]['container'];
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+            td = document.createElement("td");
+            td.innerText = array['formats'][format]['itag'];
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+
+            //np = document.createElement("p");
+            //np.innerText = array['formats'][format]['qualityLabel'] + ": itag: " + array['formats'][format]['itag'];
+        }
+

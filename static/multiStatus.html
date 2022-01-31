@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>YTDL - Status</title>
+    </head>
+    <body>
+        <h1>Video:</h1>
+        <h1 id="title">Waiting...</h1>
+        <h3><span id="n1"></span> von <span id="n2"></span> : <span id="pp"></span></h3>
+
+        <hr>
+
+        <h1>Audio:</h1>
+        <h1 id="audioTitle">Waiting...</h1>
+        <h3><span id="an1"></span> von <span id="an2"></span> : <span id="app"></span></h3>
+
+        <hr>
+
+        <h1>Converting</h1>
+        <p id="superP">Waiting for download!</p>
+
+        <p id="error" style="display: none">An Error happened! </p><button id="homeButton" style="display: none" onclick="window.location.href = '/'" type="button">Home</button>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script type="text/javascript">
+
+            let title;
+
+            let updateInterval = setInterval(function () {
+                $.get({
+                    url: '/progress',
+                    success: function (resp) {
+                        console.log(resp)
+                        title = resp.title;
+                        if (resp.error) {
+                            document.getElementById("error").setAttribute("style", "color: red");
+                            document.getElementById("homeButton").removeAttribute("style");
+                        }
+
+                        if (resp.status === "downloading") {
+                            document.getElementById("title").innerText = "Downloading...";
+                            document.getElementById("n1").innerText = resp.p1;
+                            document.getElementById("n2").innerText = resp.p2;
+                            document.getElementById("pp").innerText = resp.pp + "%";
+                        } else if (resp.status === "finished") {
+                            document.getElementById("title").innerText = "Finished";
+                            document.getElementById("n1").innerText = resp.p2;
+                            document.getElementById("pp").innerText = "100%";
+                        }
+
+                        if (resp.aStatus === "downloading") {
+                            document.getElementById("audioTitle").innerText = "Downloading...";
+                            document.getElementById("an1").innerText = resp.ap1;
+                            document.getElementById("an2").innerText = resp.ap2;
+                            document.getElementById("app").innerText = resp.app + "%";
+                        } else if (resp.aStatus === "finished") {
+                            document.getElementById("audioTitle").innerText = "Finished";
+                            document.getElementById("an1").innerText = resp.ap2;
+                            document.getElementById("app").innerText = "100%";
+                        }
+
+                        if (resp.status === "finished" && resp.aStatus === "finished") {
+                            if (resp.convertStatus === "finished") {
+                                clearInterval(updateInterval);
+                                document.getElementById("superP").innerText = "Done!"
+                                downloadURI('/splitVideo', title);
+                                document.getElementById("homeButton").removeAttribute("style");
+                            } else {
+                                document.getElementById("superP").innerText = "Converting..."
+                            }
+                        }
+                    }
+                })
+            }, 500);
+
+            function downloadURI(uri, name) {
+                let link = document.createElement("a");
+                link.download = name;
+                link.href = uri;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                link.remove();
+            }
+
+        </script>
+    </body>
+</html>

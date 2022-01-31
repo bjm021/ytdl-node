@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Youtube Downloader</title>
+    </head>
+    <body>
+        <h1>Youtube Downloader</h1>
+        <hr>
+        <form id="form" action="/download" method="post" enctype="application/x-www-form-urlencoded">
+            <input type="url" name="url" placeholder="Youtube Url">
+            <button type="submit">Download</button>
+            <button onclick="advanced()" type="button">Advanced</button>
+            <br><br>
+            For best quality use Advanced (because YouTube splits the Audio and Video files for larger resolutions)
+            <br>
+            A table with all suitable resolutions will be provided to choose from!
+            <br><br><br><br><br>
+            <hr>
+            © 2022 BJM SoftwareWorks
+        </form>
+        <script>
+            function advanced() {
+                document.getElementById("form").setAttribute("action", "/advanced");
+                let form = document.getElementById("form");
+                form.submit();
+            }
+        </script>
+    </body>
+</html>

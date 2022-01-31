@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>YTDL - Status</title>
+    </head>
+    <body>
+        <h1 id="title">Waiting...</h1>
+        <h3><span id="n1"></span> von <span id="n2"></span> : <span id="pp"></span></h3>
+        <h4 id="downloadButton" style="display: none"><a download="download.mp4" href="/video">Download</a></h4>
+
+        <button id="homeButton" style="display: none" onclick="window.location.href = '/'" type="button">Home</button>
+
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script type="text/javascript">
+
+            let updateInterval = setInterval(function () {
+                $.get({
+                    url: '/progress',
+                    success: function (resp) {
+                        console.log(resp)
+                        if (resp.status === "finished") {
+                            document.getElementById("n1").innerText = resp.p2;
+                            document.getElementById("pp").innerText = "100%";
+                            clearInterval(updateInterval);
+                            downloadURI('/video', 'download.mp4');
+                            document.getElementById("homeButton").removeAttribute("style");
+                        } else if (resp.status === "downloading") {
+                            document.getElementById("title").innerText = "Downloading...";
+                            document.getElementById("n1").innerText = resp.p1;
+                            document.getElementById("n2").innerText = resp.p2;
+                            document.getElementById("pp").innerText = resp.pp + "%";
+                        }
+                    }
+                })
+            }, 500);
+
+            function downloadURI(uri, name) {
+                let link = document.createElement("a");
+                link.download = name;
+                link.href = uri;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                link.remove();
+            }
+
+        </script>
+    </body>
+</html>
