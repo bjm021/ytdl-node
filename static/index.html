@@ -10,10 +10,16 @@
         <hr>
         <form id="form" action="/download" method="post" enctype="application/x-www-form-urlencoded">
             <input type="url" name="url" placeholder="Youtube Url">
+            <select name="quality" id="quality">
+                <option selected="" value="lowest" disabled>Select quality</option>
+                <option value="lowest">Default</option>
+                <option value="highest">Highest*</option>
+            </select>
             <button type="submit">Download</button>
             <button onclick="advanced()" type="button">Advanced</button>
+            <button style="background-color: greenyellow" onclick="audio()" type="button">Convert to Audio</button>
             <br><br>
-            For best quality use Advanced (because YouTube splits the Audio and Video files for larger resolutions)
+            For best quality use Advanced (because YouTube splits the Audio and Video files for larger resolutions) (*Quality: highest might not be the best)
             <br>
             A table with all suitable resolutions will be provided to choose from!
             <br><br><br><br><br>
@@ -23,6 +29,12 @@
         <script>
             function advanced() {
                 document.getElementById("form").setAttribute("action", "/advanced");
+                let form = document.getElementById("form");
+                form.submit();
+            }
+
+            function audio() {
+                document.getElementById("form").setAttribute("action", "/audio");
                 let form = document.getElementById("form");
                 form.submit();
             }

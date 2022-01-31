@@ -16,16 +16,19 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
         <script type="text/javascript">
 
+            let title;
+
             let updateInterval = setInterval(function () {
                 $.get({
                     url: '/progress',
                     success: function (resp) {
                         console.log(resp)
+                        title = resp.title;
                         if (resp.status === "finished") {
                             document.getElementById("n1").innerText = resp.p2;
                             document.getElementById("pp").innerText = "100%";
                             clearInterval(updateInterval);
-                            downloadURI('/video', 'download.mp4');
+                            downloadURI('/video', title);
                             document.getElementById("homeButton").removeAttribute("style");
                         } else if (resp.status === "downloading") {
                             document.getElementById("title").innerText = "Downloading...";

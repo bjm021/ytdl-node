@@ -19,6 +19,7 @@ let aFinished = false;
 let convertFinished = false;
 let videoTitle = undefined;
 let error = false;
+let audioConvert = false;
 
 app.set('view engine', 'pug');
 
@@ -30,23 +31,28 @@ app.get('/', (req, res) => {
 app.post("/download", urlencodedParser, function (req, res) {
     error = false;
     delete 'video.mp4';
-    stream = ytdl(req.body.url);
-    stream.pipe(fs.createWriteStream('video.mp4'));
 
-    stream.on("progress", function (n1, n2, n3) {
-        if (!started) started = true;
-        console.log("Progress: " + n1 + " " + n2 + " " + n3 + " " + (n2 / n3) * 100);
-        progress1 = n2;
-        progress2 = n3;
+    ytdl.getInfo(req.body.url).then(info => {
+        videoTitle = info['player_response']['videoDetails']['title'];
+        console.log("Quality: " + req.body.quality);
+        stream = ytdl.downloadFromInfo(info, {quality: req.body.quality});
+        stream.pipe(fs.createWriteStream('video.mp4'));
+
+        stream.on("progress", function (n1, n2, n3) {
+            if (!started) started = true;
+            console.log("Progress: " + n1 + " " + n2 + " " + n3 + " " + (n2 / n3) * 100);
+            progress1 = n2;
+            progress2 = n3;
+        });
+
+        stream.on("finish", function () {
+            console.log("Finished");
+            finish = true;
+        })
+
+        console.log("Starting dl");
+        res.redirect("/status");
     });
-
-    stream.on("finish", function () {
-        console.log("Finished");
-        finish = true;
-    })
-
-    console.log("Starting dl");
-    res.redirect("/status");
 })
 
 app.get("/progress", function (req, res) {
@@ -59,6 +65,10 @@ app.get("/progress", function (req, res) {
     arr['ap1'] = aProg1;
     arr['ap2'] = aProg2;
     arr['app'] = (aProg1 / aProg2) * 100;
+
+    if (audioConvert) {
+        arr['audioConvert'] = true;
+    }
 
     if (finish) {
         arr['status'] = "finished";
@@ -108,8 +118,19 @@ app.get("/splitVideo", function (req, res) {
     finish = false;
     started = false;
     aFinished = false;
+    aStarted = false;
     convertFinished = false;
     res.sendFile(path.join(__dirname, 'output.mp4'));
+})
+
+app.get("/audioFile", function (req, res) {
+    finish = false;
+    started = false;
+    aFinished = false;
+    aStarted = false;
+    convertFinished = false;
+    audioConvert = false;
+    res.sendFile(path.join(__dirname, 'audio.mp3'));
 })
 
 app.post("/advanced", urlencodedParser, function (req, res) {
@@ -216,6 +237,98 @@ process.on('uncaughtException', err => {
     console.error('There was an uncaught error', err)
     error = true;
 })
+
+
+// ---------- Audio Conversion ----------
+
+app.post("/audio", urlencodedParser, function (req, res) {
+    error = false;
+
+    // delete audio file if exists
+    fs.unlink('audio.mp3', (err) => {
+        if (err) console.log("audio does not exist!");
+        console.log('audio.mp3 was deleted');
+    });
+    fs.unlink('audio', (err) => {
+        if (err) console.log("audio does not exist!");
+        console.log('audio was deleted');
+    });
+
+    ytdl.getInfo(req.body.url).then(info => {
+        videoTitle = info['player_response']['videoDetails']['title'];
+
+        let itag = findBestFormat("AUDIO_QUALITY_HIGH", info);
+        if (itag === -1) {
+            itag = findBestFormat("AUDIO_QUALITY_MEDIUM", info);
+        }
+        if (itag === -1) {
+            findBestFormat("AUDIO_QUALITY_LOW", info);
+        }
+
+        //res.send("Best should be: " + itag);
+
+        // find best audio
+
+        stream = ytdl.downloadFromInfo(info, {quality: itag});
+        stream.pipe(fs.createWriteStream('audio'));
+
+        stream.on("progress", function (n1, n2, n3) {
+            if (!started) started = true;
+            audioConvert = true;
+            aStarted = true;
+            finish = false;
+            aFinished = false;
+            convertFinished = false;
+
+            console.log("Audio (" + itag + ") Progress: " + n1 + " " + n2 + " " + n3 + " " + (n2 / n3) * 100);
+            aProg1 = n2;
+            aProg2 = n3;
+        });
+
+        stream.on("finish", function () {
+            console.log("Finished");
+            aFinished = true;
+            progress1 = 1;
+            progress2 = 1;
+            finish = true;
+
+            console.log("Converting to audio.mp3");
+            const command = "ffmpeg -i audio -vn -ar 44100 -ac 2 -b:a 192k audio.mp3";
+
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`);
+                    return;
+                }
+                convertFinished = true;
+                console.log(`stdout: ${stdout}`);
+                console.error(`stderr: ${stderr}`);
+            })
+
+        })
+
+        console.log("Starting dl");
+
+        res.redirect("/multiStatus");
+
+    });
+})
+
+
+function findBestFormat(qualityLabel, info) {
+    let formats = info['formats'];
+    for (i in formats) {
+        let f = formats[i];
+
+        if (f.mimeType.startsWith('audio/')) {
+            if (f.audioQuality === qualityLabel) {
+                return f.itag;
+            }
+        }
+
+    }
+    return -1;
+}
 
 
 function checkReady() {
