@@ -50,9 +50,14 @@
                                 document.getElementById("pp").innerText = resp.pp + "%";
                             }
                         } else if (resp.status === "finished") {
-                            document.getElementById("title").innerText = "Finished";
-                            document.getElementById("n1").innerText = resp.p2;
-                            document.getElementById("pp").innerText = "100%";
+                            if (resp.audioConvert) {
+                                document.getElementById("title").innerText = "Skipped / No Video";
+                            } else {
+                                document.getElementById("title").innerText = "Finished";
+                                document.getElementById("n1").innerText = resp.p2;
+                                document.getElementById("pp").innerText = "100%";
+                            }
+
                         }
 
                         if (resp.aStatus === "downloading") {

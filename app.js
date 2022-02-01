@@ -52,6 +52,10 @@ app.post("/download", urlencodedParser, function (req, res) {
 
         console.log("Starting dl");
         res.redirect("/status");
+    }).catch(err => {
+        if (err.message === "Not a YouTube domain") {
+            res.render('error.jade', {reason: "Invalid YouTube Domain"})
+        }
     });
 })
 
@@ -139,6 +143,10 @@ app.post("/advanced", urlencodedParser, function (req, res) {
     ytdl.getInfo(req.body.url).then(r => {
         console.log(r);
         res.render("advanced.jade", {array: r, title: r['player_response']['videoDetails']['title'], url: req.body.url})
+    }).catch(err => {
+        if (err.message === "Not a YouTube domain") {
+            res.render('error.jade', {reason: "Invalid YouTube Domain"})
+        }
     });
 })
 
@@ -165,6 +173,10 @@ app.post("/downloadAdvanced", urlencodedParser, function (req, res) {
 
         console.log("Starting advanced dl");
         res.redirect("/status");
+    }).catch(err => {
+        if (err.message === "Not a YouTube domain") {
+            res.render('error.jade', {reason: "Invalid YouTube Domain"})
+        }
     });
 
 })
@@ -221,10 +233,16 @@ app.post("/multiDL", urlencodedParser, function (req, res) {
         })
 
 
-    })
+        res.redirect("/multiStatus");
 
 
-    res.redirect("/multiStatus");
+    }).catch(err => {
+        if (err.message === "Not a YouTube domain") {
+            res.render('error.jade', {reason: "Invalid YouTube Domain"})
+        }
+    });
+
+
 
 })
 
@@ -311,6 +329,10 @@ app.post("/audio", urlencodedParser, function (req, res) {
 
         res.redirect("/multiStatus");
 
+    }).catch(err => {
+        if (err.message === "Not a YouTube domain") {
+            res.render('error.jade', {reason: "Invalid YouTube Domain"})
+        }
     });
 })
 
